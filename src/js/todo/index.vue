@@ -29,17 +29,20 @@
             </button>
           </div>
         </form>
-
+        <div v-if="errorMessage" class="error">
+          <p class="error__text">{{ errorMessage }}</p>
+        </div>
         <div class="todos">
+          <template v-if="todos.length">
           <ul class="todos__list">
-            <li>
+            <li v-for="todo in todos">
               <div class="todos__inner">
                 <div class="todos__completed">
                   <button class="todos__completed__btn" type="button">未完了</button>
                 </div>
                 <div class="todos__desc">
-                  <h2 class="todos__desc__title">ここにはTodoのタイトルが入ります</h2>
-                  <p class="todos__desc__detail">ここにはTodoの内容が入ります</p>
+                  <h2 class="todos__desc__title">{{ todo.title }}</h2>
+                  <p class="todos__desc__detail">{{ todo.detail }}</p>
                 </div>
                 <div class="todos__btn">
                   <button class="todos__btn__edit" type="button">編集</button>
@@ -48,6 +51,10 @@
               </div>
             </li>
           </ul>
+          </template>
+          <template v-else>
+            <p class="todos__empty">やることリストには何も登録されていません。</p>
+          </template>
         </div>
       </main>
 
@@ -61,19 +68,29 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
-      todos: [
-        /* {
-          id: 1,
-          title: 'タイトル 01',
-          detail: '詳細 01',
-          completed: false,
-        }, */
-      ],
+      todos: [],
+      errorMessage: '',
     };
   },
+  created() {
+    axios.get('http://localhost:3000/api/todos/')
+        .then( ({data}) => {
+          console.log(data);
+          this.todos = data.todos.reverse();
+        })
+        .catch(err => {
+          if (err.response) {
+            this.errorMessage = err.response.data.message;
+          } else {
+            this.errorMessage = 'ネットに接続がされていない、もしくはサーバーとの接続がされていません。ご確認ください。';
+          }
+        });
+  }
 };
 </script>
 
