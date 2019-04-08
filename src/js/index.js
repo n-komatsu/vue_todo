@@ -9,8 +9,8 @@ import Vue from 'vue';
 
 import '../scss/global.scss';
 
-import myApp from './first';
-// import myApp from 'TodoDir';
+// import myApp from './first';
+import myApp from 'TodoDir';
 // import myApp from 'TodoRouterDir';
 // import myApp from 'TodoVuexDir';
 // import myApp from 'VuexSample';
