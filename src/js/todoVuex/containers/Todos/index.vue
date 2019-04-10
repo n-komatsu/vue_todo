@@ -1,16 +1,17 @@
 <template lang="html">
   <app-wrapper>
     <app-register v-if="todoFilter !== 'completedTodos'" />
-    <app-error-message />
+    <app-error-message v-if="!computedHasError" />
     <template v-slot:todos>
       <app-list v-if="todos.length" :todos="todos" />
-      <app-empty-message />
+      <app-empty-message v-if="!computedcheckEmptyTodos"/>
     </template>
   </app-wrapper>
 </template>
 
 <script>
 import Wrapper from 'TodoVuexDir/components/Wrapper';
+import Navi from 'TodoVuexDir/components/Navi';
 import { ErrorMessage, EmptyMessage } from 'TodoVuexDir/components/Message';
 import Register from 'TodoVuexDir/components/Register';
 import List from 'TodoVuexDir/components/List';
@@ -36,6 +37,12 @@ export default {
     errorMessage: function() {
       return this.$store.state.errorMessage;
     },
+    computedHasError() {
+      return this.$store.getters.hasError;
+    },
+    computedcheckEmptyTodos() {
+      return this.$store.getters.checkEmptyTodos;
+    }
   },
   watch: {
     todos: function(todos) {

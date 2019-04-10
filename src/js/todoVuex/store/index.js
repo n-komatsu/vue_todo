@@ -15,32 +15,40 @@ const store = new Vuex.Store({
       detail: '',
       completed: '',
     },
-    errorMessage: 'エラーが起きました。',
-    emptyMessage: 'やることリストは空です。',
+    errorMessage: '',
+    emptyMessage: '',
   },
   getters: {
-    completedTodos: function(state) {
+    completedTodos(state) {
       return state.todos.filter((todo) => {
         return todo.completed;
       })
     },
-    incompleteTodos: function(state) {
+    incompleteTodos(state) {
       return state.todos.filter((todo) => {
         return !todo.completed;
       })
     },
-    completedTodosLength: function(state, getters) {
+    completedTodosLength(state, getters) {
       return getters.completedTodos.length;
     },
-    incompleteTodosLength: function(state, getters) {
+    incompleteTodosLength(state, getters) {
       return getters.incompleteTodos.length;
     },
+    hasError(state, getters) {
+      const hasErrorFlg = state.errorMessage.length === 0;
+      return hasErrorFlg;
+    },
+    checkEmptyTodos(state, getters) {
+      const TodosEmptyFlg = state.emptyMessage.length === 0; 
+      return TodosEmptyFlg;
+    }
   },
   mutations: {
-    setTodoFilter: function(state, routeName) {
+    setTodoFilter(state, routeName) {
       state.todoFilter = routeName;
     },
-    setEmptyMessage: function(state, routeName) {
+    setEmptyMessage(state, routeName) {
       if (routeName === 'completedTodos') {
         let emptyMessage = '完了済みのやることリストはありません。';
       } else if (routeName === 'incompleteTodos') {
@@ -49,7 +57,7 @@ const store = new Vuex.Store({
         let emptyMessage = 'やることリストには何も登録されていません。';
       }
     },
-    initTargetTodo: function(state) {
+    initTargetTodo(state) {
       state.targetTodo = {
         id: null,
         title: '',
@@ -57,12 +65,13 @@ const store = new Vuex.Store({
         completed: false,
       };
     },
-    hideError: function(state) {
+    hideError(state) {
       state.errorMessage = 'エラーが起きました。';
     },
-    showError: function(state, payload) {
-      if (payload) {
-        const errorMessage = payload.data;
+    showError(state, payload) {
+      if (payload.err) {
+        console.log(payload.err);
+        const errorMessage = payload.err.data;
       } else {
         state.errorMessage = 'ネットに接続がされていない、もしくはサーバーとの接続がされていません。ご確認ください。';
       }
@@ -70,40 +79,46 @@ const store = new Vuex.Store({
     updateTargetTodo(state, { name, value }) {
       state.targetTodo[name] = value;
     },
-    getTodos: function(state, payload) {
+    getTodos(state, payload) {
       state.todos = payload.reverse();
     },
-    addTodo: function(state, payload) {
+    addTodo(state, payload) {
       state.todos.unshift(payload);
     },
-    showEditor: function(state, payload) {
+    showEditor(state, payload) {
       state.targetTodo = Object.assign({}, payload);
     },
-    editTodo: function(state, payload) {
+    editTodo(state, payload) {
       state.todos = state.todos.map((todoItem) => {
         if (todoItem.id === payload.id) return payload;
         return todoItem;
       });
     },
+    deleteTodo(state, payload) {
+      state.todos = payload.todos.reverse();
+    }
   },
   actions: {
-    setTodoFilter: function({ commit }, routeName) {
+    setTodoFilter({ commit }, routeName) {
       commit('setTodoFilter', routeName);
     },
-    setEmptyMessage: function({ commit }, routeName) {
+    setEmptyMessage({ commit }, routeName) {
       commit('setEmptyMessage', routeName);
     },
     updateTargetTodo({ commit }, { name, value }) {
       commit('updateTargetTodo', { name, value });
     },
-    getTodos: function({ commit }) {
+    getTodos({ commit }) {
       axios.get('http://localhost:3000/api/todos/').then(function({ data }) {
         commit('getTodos', data.todos);
       }).catch(function(err) {
-        commit('showError', err.response);
+        const payload = {
+          err: err.response,
+        }
+        commit('showError', payload);
       });
     },
-    addTodo: function({ commit, state }) {
+    addTodo({ commit, state }) {
       if (!state.targetTodo.title || !state.targetTodo.detail) {
         commit({
           type: 'showError',
@@ -118,25 +133,31 @@ const store = new Vuex.Store({
       axios.post('http://localhost:3000/api/todos/', postTodo).then(function({ data }) {
         commit('addTodo', data);
       }).catch(function(err) {
-        commit('showError', err.response);
+        const payload = {
+          err: err.response,
+        }
+        commit('showError', payload);
       });
       commit('initTargetTodo');
     },
-    changeCompleted: function({ commit }, payload) {
+    changeCompleted({ commit }, payload) {
       const targetTodo = Object.assign({}, payload);
       axios.patch(`http://localhost:3000/api/todos/${targetTodo.id}`, {
         completed: !targetTodo.completed,
       }).then(function({ data }) {
         commit('editTodo', data);
       }).catch(function(err) {
-        commit('showError', err.response);
+        const payload = {
+          err: err.response,
+        }
+        commit('showError', payload);
       });
       commit('initTargetTodo');
     },
-    showEditor: function({ commit }, payload) {
+    showEditor({ commit }, payload) {
       commit('showEditor', payload);
     },
-    editTodo: function({ commit, state }) {
+    editTodo({ commit, state }) {
       const targetTodo = state.todos.find(todo => todo.id === state.targetTodo.id);
       if (
         targetTodo.title === state.targetTodo.title
@@ -151,17 +172,29 @@ const store = new Vuex.Store({
       }).then(function({ data }) {
         commit('editTodo', data);
       }).catch(function(err) {
-        commit('showError', err.response);
+        const payload = {
+          err: err.response,
+        }
+        commit('showError', payload);
       });
       commit('initTargetTodo');
     },
-    deleteTodo: function({ commit }, payload) {
-      axios.delete(`http://localhost:3000/api/todos/${payload}`).then(function({ data }) {
+    deleteTodo({ commit,state }, todo) {
+      axios.delete(`http://localhost:3000/api/todos/${todo.id}`).then(function({ data }) {
         // 処理
+        const payload = {
+          todos: data.todos,
+        };
+        commit('deleteTodo', payload);
       }).catch(function(err) {
         // 処理
+        const payload = {
+          err: err.response,
+        }
+        commit('showError', payload);
       });
       // 必要があれば処理
+      commit('initTargetTodo');
     },
   },
 });

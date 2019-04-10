@@ -1,1 +1,1 @@
-{"todos":[{"title":"1つ目のTODOタイトル","detail":"1つ目のTODO詳細","id":1,"completed":false},{"title":"2つ目のTODOタイトル","detail":"2つ目のTODO詳細","id":2,"completed":false},{"title":"3つ目のTODOタイトル","detail":"3つ目のTODO詳細","id":3,"completed":false},{"title":"Vue.jsの勉強","detail":"TODOアプリの実装","id":4,"completed":false},{"title":"Vue.jsの勉強","detail":"TODOアプリの実装","id":5,"completed":false},{"title":"Vue.jsの勉強","detail":"TODOアプリの実装","id":6,"completed":false},{"title":"テスト","detail":"テスト","id":7,"completed":false}]}
+{"todos":[{"title":"テスト","detail":"テスト","id":7,"completed":false}]}
